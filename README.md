@@ -1,2 +1,2 @@
 # cnn-path-planner
-Step-by-step CNN policy for 2D robot path planning, trained by behaviour cloning on occupancy grids and compared against A*.
+This repository contains a learned path planner for 2D occupancy-grid maps, built for the SbC course at UTCN. A CNN takes a 4-channel grid obstacles, path, current position, goal and predicts the next move among 8 directions. It is trained by behaviour cloning on the 2D path planning dataset and evaluated against A* on success rate, path length ratio, collisions, and planning time. The aim is to measure where a learned planner gets close to optimal and where it fails, rather than to beat A* on static maps.
