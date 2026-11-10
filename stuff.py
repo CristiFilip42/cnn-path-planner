@@ -5,5 +5,5 @@ from path_dataset import PathDataset
 folder = Path("/Users/filipdinu/PycharmProjects/Proiect-SBC/Dataset/map_dataset/train/")
 files = sorted(folder.glob("*.pt"))
 
-
+show_map(load_map_sample(files[0])[0])
 
