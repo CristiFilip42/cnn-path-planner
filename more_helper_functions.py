@@ -31,4 +31,4 @@ def evaluate_model(model, folder, device, limit=1000):
                 break
             x[1, pos[0], pos[1]] = 1
 
-    print(f"finished {correct}/{len(maps)} ({100 * correct / len(maps):.1f}%)")
+    return str((f"finished {correct}/{len(maps)} ({100 * correct / len(maps):.1f}%)"))

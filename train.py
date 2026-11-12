@@ -9,19 +9,21 @@ from path import pathCNN
 from datetime import datetime
 
 now = str(datetime.now())[:19]
-train_log_file = Path("/Users/filipdinu/PycharmProjects/Proiect-SBC/Dataset/map_dataset/training_log/train_log.txt")
-with train_log_file.open("a") as f:
-    f.write(now + "\n")
 
 
 DATA_DIR = Path("/Users/filipdinu/PycharmProjects/Proiect-SBC/Dataset/map_dataset")
+train_log_file = Path("/Users/filipdinu/PycharmProjects/Proiect-SBC/Dataset/map_dataset/training_log/train_log.txt")
 test_files = sorted((DATA_DIR / "test").glob("*.pt"))
-TRAIN_LIMIT = 48000
+TRAIN_LIMIT = 56000
 BATCH_SIZE = 128
 LEARNING_RATE = 1.3e-3
 learning_end = 1e-5
 EPOCHS = 100
 PRINT_EVERY = 200
+
+with train_log_file.open("a") as f:
+    f.write(f"train_limit = {TRAIN_LIMIT}\nbatch_size = {BATCH_SIZE}\nlearning_rate = {LEARNING_RATE}\nlearning_end = {learning_end}"
+            f"\nepoch = {EPOCHS}\n" + "\n")
 
 def main():
     device = "mps"
@@ -30,7 +32,8 @@ def main():
     print(f"if you see this the data loaded succesfully")
 
     now = str(datetime.now())[:19]
-    print(now)
+    with train_log_file.open("a") as f:
+        f.write(now + "\n")
     train_loader = DataLoader(
         train_set,
         batch_size=BATCH_SIZE,
@@ -61,11 +64,19 @@ def main():
             running += loss.item()
             correct += (out.argmax(dim=1) == y).sum().item()
             total += len(y)
-        print(f"epoch {epoch} done, {time.time() - t_epoch:.0f}s, "
-              f"loss {running / len(train_loader):.4f}, accuracy {100 * correct / total:.1f}%")
+        epoch_log = str((f"epoch {epoch} done, {time.time() - t_epoch:.0f}s, "
+              f"loss {running / len(train_loader):.4f}, accuracy {100 * correct / total:.1f}%"))
+        print(epoch_log)
+        with train_log_file.open("a") as f:
+            f.write(epoch_log + "\n")
+
         scheduler.step()
         if(epoch > 10 and epoch % 10 == 0):
-            evaluate_model(model, DATA_DIR / "test", device, limit=100)
+            maps_completed_log = (
+                evaluate_model(model, DATA_DIR / "test", device, limit=100))
+            print(maps_completed_log)
+            with train_log_file.open("a") as f:
+                f.write(maps_completed_log + "\n")
 
 
 if __name__ == "__main__":
