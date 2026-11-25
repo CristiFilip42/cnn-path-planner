@@ -6,11 +6,13 @@ directionz = {(-1, 0): 0, (-1, 1): 1, (0, 1): 2, (1, 1): 3, (1, 0): 4, (1, -1): 
 
 def load_map_sample(path):
     with zipfile2.ZipFile(path) as z:
-        grid = torch.frombuffer(bytearray(z.read("archive/data/0")), dtype=torch.float32).reshape(100, 100)
-        grid = grid.to(torch.uint8)
-        start = torch.frombuffer(bytearray(z.read("archive/data/1")), dtype=torch.int64)
-        goal = torch.frombuffer(bytearray(z.read("archive/data/2")), dtype=torch.int64)
-        path = torch.frombuffer(bytearray(z.read("archive/data/3")), dtype=torch.int64).reshape(-1, 2)
+        prefix = z.namelist()[0].split('/')[0]
+        read = lambda k: bytearray(z.read(f"{prefix}/data/{k}"))
+
+        grid = torch.frombuffer(read(0), dtype=torch.float32).reshape(100, 100).to(torch.uint8)
+        start = torch.frombuffer(read(1), dtype=torch.int64)
+        goal = torch.frombuffer(read(2), dtype=torch.int64)
+        path = torch.frombuffer(read(3), dtype=torch.int64).reshape(-1, 2)
         return grid, start, goal, path
 
 def show_map(grid):

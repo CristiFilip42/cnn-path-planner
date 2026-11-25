@@ -14,11 +14,11 @@ now = str(datetime.now())[:19]
 DATA_DIR = Path("/Users/filipdinu/PycharmProjects/Proiect-SBC/Dataset/map_dataset")
 train_log_file = Path("/Users/filipdinu/PycharmProjects/Proiect-SBC/Dataset/map_dataset/training_log/train_log.txt")
 test_files = sorted((DATA_DIR / "test").glob("*.pt"))
-TRAIN_LIMIT = 50000
+TRAIN_LIMIT = None
 BATCH_SIZE = 128
-LEARNING_RATE = 2e-3
+LEARNING_RATE = 5e-4
 learning_end = 1e-5
-EPOCHS = 30
+EPOCHS = 120
 PRINT_EVERY = 200
 
 with train_log_file.open("a") as f:
@@ -46,7 +46,7 @@ def main():
 
     model = pathCNN().to(device)
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-5)
     scheduler = torch.optim.lr_scheduler.LinearLR(
         optimizer, start_factor=1.0, end_factor=learning_end / LEARNING_RATE, total_iters=EPOCHS
     )
@@ -73,7 +73,7 @@ def main():
             f.write(epoch_log + "\n")
 
         scheduler.step()
-        if(epoch > 10 and epoch % 10 == 0):
+        if(epoch > 25 and epoch % 5 == 0):
             maps_completed_log = (
                 evaluate_model(model, DATA_DIR / "test", device, limit=1000))
             print(maps_completed_log)

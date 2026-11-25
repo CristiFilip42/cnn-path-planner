@@ -1,12 +1,12 @@
 import torch.nn as nn
 import torch
 
-# i want to create a 9x9 patch around the car;
+# i want to create a 17x17 (car goes in too) patch around the car;
 
 def create_patch(x, y, map, outside):
-    map_padded = torch.full((108, 108), float(outside), device=map.device)
-    map_padded[4:104, 4:104] = map
-    map_around_car = map_padded[x:x + 9, y:y + 9]
+    map_padded = torch.full((116, 116), float(outside), device=map.device)
+    map_padded[8:108, 8:108] = map
+    map_around_car = map_padded[x:x + 17, y:y + 17]
     flattened_map = map_around_car.flatten()
     return flattened_map
 
@@ -19,9 +19,7 @@ def create_patches(batch):
 
         walls = create_patch(x, y, sample[0], 1)
         goal = create_patch(x, y, sample[2], 0)
-        visited = create_patch(x, y, sample[3], 1)
-
-        all_patches.append(torch.cat([walls, goal, visited]))
+        all_patches.append(torch.cat([walls, goal]))
     return torch.stack(all_patches)
 
 
@@ -32,25 +30,24 @@ class pathCNN(nn.Module):
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
         self.conv4 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.conv5 = nn.Conv2d(128, 64, kernel_size=3, padding=1)
         self.pool = nn.MaxPool2d(2)
-        self.pool2 = nn.AvgPool2d(4)
         self.relu = nn.ReLU()
-        self.fc1 = nn.Linear(128 * 12 * 12 + 243, 1024)
-        self.fc2 = nn.Linear(1024, 256)
-        self.fc3 = nn.Linear(256, 8)
+        self.fc1 = nn.Linear(64 * 12 * 12, 512)
+        self.fc2 = nn.Linear(512 + 2 * 17 * 17, 512)
+        self.fc3 = nn.Linear(512, 8)
 
     def forward(self, x):
         patches = create_patches(x)
 
-        x = self.relu(self.conv1(x))
-        x = self.relu(self.conv2(x))
-        x = self.pool(x)
-        x = self.relu(self.conv3(x))
-        x = self.pool2(x)
+        x = self.pool(self.relu(self.conv1(x)))
+        x = self.pool(self.relu(self.conv2(x)))
+        x = self.pool(self.relu(self.conv3(x)))
         x = self.relu(self.conv4(x))
+        x = self.relu(self.conv5(x))
         x = x.flatten(start_dim=1)
-        x = torch.cat([x, patches], dim=1)
         x = self.relu(self.fc1(x))
+        x = torch.cat([x, patches], dim=1)
         x = self.relu(self.fc2(x))
         x = self.fc3(x)
         return x
